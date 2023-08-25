@@ -1,0 +1,8 @@
+.DS_Store
+dist/
+node_modules/
+.idea/
+desktop/
+.env
+.vscode
+src-tauri/target/
