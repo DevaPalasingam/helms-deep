@@ -6,8 +6,8 @@ const BOTTOM = 755;
 const TOP = 590;
 const LEFT_EDGE = 20;
 const RIGHT_EDGE = 1420;
-const DOOR_LEFT = 500;
-const DOOR_RIGHT = 900;
+const DOOR_LEFT = 550;
+const DOOR_RIGHT = 850;
 
 kaboom();
 
@@ -24,6 +24,12 @@ loadSprite("orc_fighter_dead0", "sprites/enemies/orc_fighter/dead/tile000.png");
 loadSprite("orc_fighter_dead1", "sprites/enemies/orc_fighter/dead/tile001.png");
 loadSprite("orc_fighter_dead2", "sprites/enemies/orc_fighter/dead/tile002.png");
 loadSprite("orc_fighter_dead3", "sprites/enemies/orc_fighter/dead/tile003.png");
+
+loadSprite("orc_fighter_jump0", "sprites/enemies/orc_fighter/jump/tile000.png");
+loadSprite("orc_fighter_jump1", "sprites/enemies/orc_fighter/jump/tile001.png");
+loadSprite("orc_fighter_jump2", "sprites/enemies/orc_fighter/jump/tile002.png");
+loadSprite("orc_fighter_jump3", "sprites/enemies/orc_fighter/jump/tile003.png");
+loadSprite("orc_fighter_jump4", "sprites/enemies/orc_fighter/jump/tile004.png");
 
 scene("game", () => {
   add([sprite("background", { width: width(), height: height() }, z(0))]);
@@ -89,11 +95,11 @@ scene("game", () => {
   function spawnEnemies() {
     let randSpawn = rand(0, 2);
     let spawnPoint = 0;
-    let enemyMove = RIGHT;
+    let enemyMove = ORC_FIGHTER_SPEED;
     let enemyFlip = false;
     if (randSpawn > 1) {
       spawnPoint = width();
-      enemyMove = LEFT;
+      enemyMove = -ORC_FIGHTER_SPEED;
       enemyFlip = true;
     }
 
@@ -101,13 +107,60 @@ scene("game", () => {
       area(),
       pos(spawnPoint, rand(TOP, BOTTOM)),
       anchor("bot"),
-      move(enemyMove, ORC_FIGHTER_SPEED),
       body(),
       area({ scale: 0.5 }),
       sprite("orc_fighter"),
+      state("run", ["run", "getClose", "attack"]),
       "orc_fighter",
     ]);
     enemy.flipX = enemyFlip;
+
+    // ----------Orc States--------------------
+    let attackState = false;
+    enemy.onStateUpdate("run", () => {
+      enemy.move(enemyMove, 0);
+      if (enemy.pos.x > DOOR_LEFT && enemy.pos.x < DOOR_RIGHT) {
+        enemy.enterState("getClose");
+      }
+    });
+    enemy.onStateUpdate("getClose", () => {
+      enemy.move(0, -ORC_FIGHTER_SPEED);
+      if (enemy.pos.y <= TOP) {
+        enemy.enterState("attack");
+      }
+    });
+    enemy.onStateUpdate("attack", () => {
+      if (!attackState) {
+        attackState = true;
+        wait(0.1, () => {
+          enemy.use(sprite("orc_fighter_jump0"));
+          enemy.flip = enemyFlip;
+          wait(0.1, () => {
+            enemy.use(sprite("orc_fighter_jump1"));
+            enemy.flip = enemyFlip;
+            wait(0.1, () => {
+              enemy.use(sprite("orc_fighter_jump2"));
+              enemy.flip = enemyFlip;
+              wait(0.1, () => {
+                enemy.use(sprite("orc_fighter_jump3"));
+                enemy.flip = enemyFlip;
+                wait(0.1, () => {
+                  enemy.use(sprite("orc_fighter_jump4"));
+                  enemy.flip = enemyFlip;
+                  wait(0.1, () => {
+                    addKaboom(enemy.pos);
+                    shake();
+                    destroy(enemy);
+                  });
+                });
+              });
+            });
+          });
+        });
+      }
+    });
+    // Orc States
+    // ---------------------------------------
 
     // --------Enemy Death Sequence-------------------
     onKeyPress("space", () => {
