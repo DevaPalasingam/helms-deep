@@ -2,6 +2,8 @@ import kaboom from "kaboom";
 
 const SPEED = 150;
 const ORC_FIGHTER_SPEED = 50;
+const ORC_RUNNER_SPEED = 250;
+const ORC_SHAMAN_SPEED = 30;
 const BOTTOM = 755;
 const TOP = 590;
 const LEFT_EDGE = 20;
@@ -34,7 +36,7 @@ loadSprite("orc_shaman_dead0", "sprites/enemies/orc_shaman/dead/tile000.png");
 loadSprite("orc_shaman_dead1", "sprites/enemies/orc_shaman/dead/tile001.png");
 loadSprite("orc_shaman_dead2", "sprites/enemies/orc_shaman/dead/tile002.png");
 loadSprite("orc_shaman_dead3", "sprites/enemies/orc_shaman/dead/tile003.png");
-loadSprite("orc_shaman_dead3", "sprites/enemies/orc_shaman/dead/tile004.png");
+loadSprite("orc_shaman_dead4", "sprites/enemies/orc_shaman/dead/tile004.png");
 
 loadSprite("orc_fighter_jump0", "sprites/enemies/orc_fighter/jump/tile000.png");
 loadSprite("orc_fighter_jump1", "sprites/enemies/orc_fighter/jump/tile001.png");
@@ -142,7 +144,7 @@ scene("game", () => {
     ]);
     enemy.flipX = enemyFlip;
 
-    // ----------Orc States--------------------
+    // ----------Orc Fighter States--------------------
     let attackState = false;
     enemy.onStateUpdate("run", () => {
       enemy.move(enemyMove, 0);
@@ -186,10 +188,10 @@ scene("game", () => {
         });
       }
     });
-    // Orc States
+    // Orc Fighter States
     // ---------------------------------------
 
-    // --------Enemy Death Sequence-------------------
+    // --------Orc Fighter Death Sequence-------------------
     onKeyPress("space", () => {
       wait(0.2, () => {
         if (enemy.pos.dist(player.pos) < 70) {
@@ -221,15 +223,14 @@ scene("game", () => {
     // wait a random amount of time to spawn next bean
     wait(rand(0.7, 2), spawnFighters);
   }
-  // TODO: SpawnRunners Function
   function spawnRunners() {
     let randSpawn = rand(0, 2);
     let spawnPoint = 0;
-    let enemyMove = ORC_FIGHTER_SPEED;
+    let enemyMove = ORC_RUNNER_SPEED;
     let enemyFlip = false;
     if (randSpawn > 1) {
       spawnPoint = width();
-      enemyMove = -ORC_FIGHTER_SPEED;
+      enemyMove = -ORC_RUNNER_SPEED;
       enemyFlip = true;
     }
 
@@ -239,22 +240,22 @@ scene("game", () => {
       anchor("bot"),
       body(),
       area({ scale: 0.5 }),
-      sprite("orc_fighter"),
+      sprite("orc_runner"),
       state("run", ["run", "getClose", "attack"]),
-      "orc_fighter",
+      "orc_runner",
     ]);
     enemy.flipX = enemyFlip;
 
-    // ----------Orc States--------------------
+    // ----------Orc Runner States--------------------
     let attackState = false;
     enemy.onStateUpdate("run", () => {
       enemy.move(enemyMove, 0);
-      if (enemy.pos.x > DOOR_LEFT && enemy.pos.x < DOOR_RIGHT) {
+      if (enemy.pos.x > DOOR_LEFT + 100 && enemy.pos.x < DOOR_RIGHT - 100) {
         enemy.enterState("getClose");
       }
     });
     enemy.onStateUpdate("getClose", () => {
-      enemy.move(0, -ORC_FIGHTER_SPEED);
+      enemy.move(0, -ORC_RUNNER_SPEED);
       if (enemy.pos.y <= TOP) {
         enemy.enterState("attack");
       }
@@ -263,24 +264,36 @@ scene("game", () => {
       if (!attackState) {
         attackState = true;
         wait(0.1, () => {
-          enemy.use(sprite("orc_fighter_jump0"));
+          enemy.use(sprite("orc_runner_jump0"));
           enemy.flip = enemyFlip;
           wait(0.1, () => {
-            enemy.use(sprite("orc_fighter_jump1"));
+            enemy.use(sprite("orc_runner_jump1"));
             enemy.flip = enemyFlip;
             wait(0.1, () => {
-              enemy.use(sprite("orc_fighter_jump2"));
+              enemy.use(sprite("orc_runner_jump2"));
               enemy.flip = enemyFlip;
               wait(0.1, () => {
-                enemy.use(sprite("orc_fighter_jump3"));
+                enemy.use(sprite("orc_runner_jump3"));
                 enemy.flip = enemyFlip;
                 wait(0.1, () => {
-                  enemy.use(sprite("orc_fighter_jump4"));
+                  enemy.use(sprite("orc_runner_jump4"));
                   enemy.flip = enemyFlip;
                   wait(0.1, () => {
-                    addKaboom(enemy.pos);
-                    shake();
-                    destroy(enemy);
+                    enemy.use(sprite("orc_runner_jump5"));
+                    enemy.flip = enemyFlip;
+                    wait(0.1, () => {
+                      enemy.use(sprite("orc_runner_jump6"));
+                      enemy.flip = enemyFlip;
+                      wait(0.1, () => {
+                        enemy.use(sprite("orc_runner_jump7"));
+                        enemy.flip = enemyFlip;
+                        wait(0.1, () => {
+                          addKaboom(enemy.pos);
+                          shake();
+                          destroy(enemy);
+                        });
+                      });
+                    });
                   });
                 });
               });
@@ -289,28 +302,171 @@ scene("game", () => {
         });
       }
     });
-    // Orc States
+    // Orc Runner States
     // ---------------------------------------
 
-    // --------Enemy Death Sequence-------------------
+    // --------Orc Runner Death Sequence-------------------
     onKeyPress("space", () => {
       wait(0.2, () => {
         if (enemy.pos.dist(player.pos) < 70) {
           let flipX = enemy.flipX;
           wait(0.1, () => {
-            enemy.use(sprite("orc_fighter_dead0"));
+            enemy.use(sprite("orc_runner_dead0"));
             enemy.flipX = flipX;
             wait(0.1, () => {
-              enemy.use(sprite("orc_fighter_dead1"));
+              enemy.use(sprite("orc_runner_dead1"));
               enemy.flipX = flipX;
               wait(0.1, () => {
-                enemy.use(sprite("orc_fighter_dead2"));
+                destroy(enemy);
+              });
+            });
+          });
+        }
+      });
+    });
+    // --------------------------------------
+
+    // wait a random amount of time to spawn next bean
+    wait(rand(6, 8), spawnRunners);
+  }
+  function spawnShamans() {
+    let randSpawn = rand(0, 2);
+    let spawnPoint = 0;
+    let enemyMove = ORC_SHAMAN_SPEED;
+    let enemyFlip = false;
+    if (randSpawn > 1) {
+      spawnPoint = width();
+      enemyMove = -ORC_SHAMAN_SPEED;
+      enemyFlip = true;
+    }
+
+    const enemy = add([
+      area(),
+      pos(spawnPoint, rand(TOP, BOTTOM)),
+      anchor("bot"),
+      body(),
+      area({ scale: 0.5 }),
+      sprite("orc_shaman"),
+      state("run", ["run", "getClose", "attack"]),
+      "orc_shaman",
+    ]);
+    enemy.flipX = enemyFlip;
+    // TODO: delete
+    // const shamanKaboom1 = add([pos(700, 300)]);
+    // let shamanKaboom2 = shamanKaboom1;
+    // shamanKaboom2.x = 600;
+    // shamanKaboom2.y = 200;
+    // let shamanKaboom3 = shamanKaboom1;
+    // shamanKaboom3.x = 800;
+    // shamanKaboom3.y = 200;
+    // let shamanKaboom4 = shamanKaboom1;
+    // shamanKaboom4.x = 600;
+    // shamanKaboom4.y = 400;
+    // let shamanKaboom5 = shamanKaboom1;
+    // shamanKaboom5.x = 800;
+    // shamanKaboom5.y = 400;
+
+    // ----------Orc Shaman States--------------------
+    let attackState = false;
+    enemy.onStateUpdate("run", () => {
+      enemy.move(enemyMove, 0);
+      if (enemy.pos.x > DOOR_LEFT - 200 && enemy.pos.x < DOOR_RIGHT + 200) {
+        enemy.enterState("getClose");
+      }
+    });
+    enemy.onStateUpdate("getClose", () => {
+      enemy.move(0, -ORC_SHAMAN_SPEED);
+      if (enemy.pos.y <= TOP) {
+        enemy.enterState("attack");
+      }
+    });
+    enemy.onStateUpdate("attack", () => {
+      if (!attackState) {
+        attackState = true;
+        wait(0.1, () => {
+          enemy.use(sprite("orc_shaman_magic0"));
+          enemy.flip = enemyFlip;
+          wait(0.1, () => {
+            enemy.use(sprite("orc_shaman_magic1"));
+            enemy.flip = enemyFlip;
+            wait(0.1, () => {
+              enemy.use(sprite("orc_shaman_magic2"));
+              enemy.flip = enemyFlip;
+              wait(0.1, () => {
+                enemy.use(sprite("orc_shaman_magic3"));
+                enemy.flip = enemyFlip;
+                wait(0.1, () => {
+                  enemy.use(sprite("orc_shaman_magic4"));
+                  enemy.flip = enemyFlip;
+                  wait(0.1, () => {
+                    enemy.use(sprite("orc_shaman_magic5"));
+                    enemy.flip = enemyFlip;
+                    wait(0.1, () => {
+                      enemy.use(opacity(0));
+                      enemy.pos.x = 700;
+                      enemy.pos.y = 300;
+                      addKaboom(enemy.pos);
+                      shake(120);
+                      wait(0.1, () => {
+                        enemy.pos.x = 600;
+                        enemy.pos.y = 200;
+                        addKaboom(enemy.pos);
+                        shake(120);
+                        wait(0.1, () => {
+                          enemy.pos.x = 800;
+                          enemy.pos.y = 200;
+                          addKaboom(enemy.pos);
+                          shake(120);
+                          wait(0.1, () => {
+                            enemy.pos.x = 600;
+                            enemy.pos.y = 400;
+                            addKaboom(enemy.pos);
+                            shake(120);
+                            wait(0.1, () => {
+                              enemy.pos.x = 800;
+                              enemy.pos.y = 400;
+                              addKaboom(enemy.pos);
+                              shake(120);
+                              destroy(enemy);
+                            });
+                          });
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      }
+    });
+    // Orc Shaman States
+    // ---------------------------------------
+
+    // --------Orc Shaman Death Sequence-------------------
+    onKeyPress("space", () => {
+      wait(0.2, () => {
+        if (enemy.pos.dist(player.pos) < 70) {
+          let flipX = enemy.flipX;
+          wait(0.1, () => {
+            enemy.use(sprite("orc_shaman_dead0"));
+            enemy.flipX = flipX;
+            wait(0.1, () => {
+              enemy.use(sprite("orc_shaman_dead1"));
+              enemy.flipX = flipX;
+              wait(0.1, () => {
+                enemy.use(sprite("orc_shaman_dead2"));
                 enemy.flipX = flipX;
                 wait(0.1, () => {
-                  enemy.use(sprite("orc_fighter_dead3"));
+                  enemy.use(sprite("orc_shaman_dead3"));
                   enemy.flipX = flipX;
                   wait(0.1, () => {
-                    destroy(enemy);
+                    enemy.use(sprite("orc_shaman_dead4"));
+                    enemy.flipX = flipX;
+                    wait(0.1, () => {
+                      destroy(enemy);
+                    });
                   });
                 });
               });
@@ -322,9 +478,11 @@ scene("game", () => {
     // --------------------------------------
 
     // wait a random amount of time to spawn next bean
-    wait(rand(0.7, 2), spawnRunners);
+    wait(rand(10, 12), spawnShamans);
   }
   spawnFighters();
+  spawnRunners();
+  spawnShamans();
   //   ------------------------------------------------------------
 });
 
